@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net11.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<NeutralResourcesLanguage>en</NeutralResourcesLanguage>
+		<!-- A bare "Microsoft" namespace segment would shadow Microsoft.Extensions.* (CS0234), so the root
+		     namespace differs from the package id. -->
+		<RootNamespace>PanoramicData.MicrosoftDefender.Api</RootNamespace>
+		<!-- RF006: Refit's source generator falls back to the reflection request builder for some signatures.
+		     DefenderClient creates its clients with RestService.For<T>(), which the diagnostic permits; this
+		     library is not trimmed or AOT-published. -->
+		<NoWarn>$(NoWarn);RF006</NoWarn>
+		<PackageId>PanoramicData.Microsoft.Defender.Api</PackageId>
+		<Owners>Panoramic Data Limited</Owners>
+		<PackageProjectUrl>https://github.com/panoramicdata/PanoramicData.Microsoft.Defender.Api</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/panoramicdata/PanoramicData.Microsoft.Defender.Api</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>Icon.png</PackageIcon>
+		<Description>An unofficial, typed .NET client for the Microsoft Defender for Endpoint REST API (v1.0): vulnerabilities, software, alerts, machines, machine actions, indicators, advanced hunting and exports. Not affiliated with or endorsed by Microsoft.</Description>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageTags>Microsoft;Defender;DefenderForEndpoint;MDE;VulnerabilityManagement;REST;PanoramicData</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Azure.Core" />
+		<PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
+		<PackageReference Include="Refit" />
+		<PackageReference Include="Refit.Reflection" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="Icon.png" Pack="true" PackagePath="" />
+		<None Include="..\README.md" Link="README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="PanoramicData.Microsoft.Defender.Api.Test" />
+	</ItemGroup>
+</Project>

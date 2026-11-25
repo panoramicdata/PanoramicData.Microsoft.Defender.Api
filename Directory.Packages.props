@@ -4,16 +4,18 @@
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
 	<ItemGroup>
-		<!-- Splunk.Api -->
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0" />
+		<!-- PanoramicData.Microsoft.Defender.Api -->
+		<PackageVersion Include="Azure.Core" Version="1.65.0" />
 		<PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
 		<PackageVersion Include="Refit" Version="17.0.0" />
 		<PackageVersion Include="Refit.Reflection" Version="17.0.0" />
 		<!-- Test projects -->
+		<PackageVersion Include="Azure.Identity" Version="1.21.0" />
 		<PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
 		<PackageVersion Include="AwesomeAssertions.Analyzers" Version="9.0.8" />
 		<PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="11.0.0" />
 		<PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="11.0.0" />
+		<PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.1" />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
 		<PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
 		<PackageVersion Include="xunit.v3" Version="4.0.3" />
