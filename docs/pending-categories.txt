@@ -9,7 +9,6 @@ domains
 ips
 users
 advanced-hunting
-vulnerabilities
 software
 recommendations
 scores
