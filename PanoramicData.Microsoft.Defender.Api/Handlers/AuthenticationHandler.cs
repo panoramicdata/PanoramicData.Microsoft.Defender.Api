@@ -96,13 +96,11 @@ internal sealed class AuthenticationHandler : DelegatingHandler
 		base.Dispose(disposing);
 	}
 
-	/// <summary>A token and when it expires. Its text is deliberately not part of any <see cref="object.ToString"/>.</summary>
+	/// <summary>A token and when it expires. It has no <see cref="object.ToString"/> override, so the token text never reaches a log.</summary>
 	private sealed class CachedToken(string value, DateTimeOffset expiresOn)
 	{
 		public string Value { get; } = value;
 
 		public DateTimeOffset ExpiresOn { get; } = expiresOn;
-
-		public override string ToString() => "CachedToken";
 	}
 }

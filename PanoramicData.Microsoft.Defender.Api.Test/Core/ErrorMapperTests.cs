@@ -106,6 +106,18 @@ public class ErrorMapperTests
 		exception.Message.Should().Be("HTTP 500 (Internal Server Error)");
 	}
 
+	/// <summary>A body whose declared charset cannot be decoded (an <see cref="InvalidOperationException"/> on reading) is handled the same way.</summary>
+	[Fact]
+	public async Task UndecodableBody_FallsBackToTheStatus()
+	{
+		using var content = new StringContent("{}");
+		content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json") { CharSet = "no-such-charset" };
+
+		var exception = await MapAsync(HttpStatusCode.BadRequest, content);
+
+		exception.Message.Should().Be("HTTP 400 (Bad Request)");
+	}
+
 	private sealed class ThrowingContent : HttpContent
 	{
 		protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) => throw new HttpRequestException("lost");

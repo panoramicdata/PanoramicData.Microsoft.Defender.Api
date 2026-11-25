@@ -61,9 +61,9 @@ internal static class DefenderErrorMapper
 		{
 			return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 		}
-		catch (Exception exception) when (exception is InvalidOperationException or HttpRequestException or IOException)
+		catch (Exception exception) when (exception is InvalidOperationException or HttpRequestException)
 		{
-			// An unsupported charset in Content-Type, or a connection lost while reading: report the status, not the read.
+			// An unsupported charset in Content-Type, or a connection lost while reading (HttpContent reports I/O failures as HttpRequestException): report the status, not the read.
 			return string.Empty;
 		}
 	}

@@ -15,10 +15,13 @@ public partial class AuthenticationHandlerTests
 		var transport = new DelegateHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 		using var invoker = new HttpMessageInvoker(new AuthenticationHandler(new DefenderClientOptions { Credential = credential, TimeProvider = clock }) { InnerHandler = transport });
 
+		// Started one after another on this thread: the first runs synchronously up to the gated credential, so each later
+		// one is certain to find the fetch in flight, which makes the contention deterministic.
 		var sends = Enumerable.Range(0, 16)
-			.Select(_ => Task.Run(() => invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, Url), TestContext.Current.CancellationToken), TestContext.Current.CancellationToken))
+			.Select(_ => invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, Url), TestContext.Current.CancellationToken))
 			.ToList();
-		await credential.FirstRequested.Task;
+		credential.FirstRequested.Task.IsCompleted.Should().BeTrue();
+		sends.Should().OnlyContain(s => !s.IsCompleted);
 		gate.SetResult();
 		foreach (var response in await Task.WhenAll(sends))
 		{
