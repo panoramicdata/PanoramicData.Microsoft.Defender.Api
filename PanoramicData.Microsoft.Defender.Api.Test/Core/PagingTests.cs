@@ -80,6 +80,7 @@ public class PagingTests
 	[Theory]
 	[InlineData("/api/vulnerabilities?$skiptoken=abc")]
 	[InlineData("not a url")]
+	[InlineData("file:///etc/passwd")]
 	public async Task GetNextPage_RefusesARelativeLink(string link)
 	{
 		var stub = new StubHandler();

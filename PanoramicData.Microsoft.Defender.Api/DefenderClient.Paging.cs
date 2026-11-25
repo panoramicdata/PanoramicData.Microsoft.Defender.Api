@@ -71,7 +71,8 @@ public sealed partial class DefenderClient
 
 	private Uri ValidateNextLink(string nextLink)
 	{
-		if (!Uri.TryCreate(nextLink, UriKind.Absolute, out var link))
+		// On Linux and macOS a rooted path such as "/api/x" parses as an absolute file:// URI, so a file URI counts as not absolute.
+		if (!Uri.TryCreate(nextLink, UriKind.Absolute, out var link) || link.IsFile)
 		{
 			throw new DefenderLinkException("The next link is not an absolute URL.");
 		}
