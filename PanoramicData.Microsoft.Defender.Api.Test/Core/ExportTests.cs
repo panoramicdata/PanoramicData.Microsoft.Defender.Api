@@ -152,6 +152,20 @@ public class ExportTests
 		downloads.Calls.Should().BeEmpty("every link is checked before the first download");
 	}
 
+	[Fact]
+	public async Task Stream_RefusesALinkWithCredentials_BeforeDownloadingOrLoggingAnything()
+	{
+		var (client, _, downloads, _, logger) = Create();
+		using var _c = client;
+
+		var act = () => client.StreamExportAsync<Vulnerability>(Export("https://user:hunter2@store.blob.test/one.json.gz?sig=SECRET"), Ct).ToListAsync(Ct).AsTask();
+
+		var thrown = await act.Should().ThrowAsync<DefenderLinkException>();
+		thrown.Which.Message.Should().Be("An export file link contains credentials.");
+		downloads.Calls.Should().BeEmpty();
+		logger.Messages.Should().NotContain(m => m.Contains("hunter2", StringComparison.Ordinal));
+	}
+
 	[Theory]
 	[InlineData(HttpStatusCode.Forbidden, "<Error><Code>AuthenticationFailed</Code><Message>sig=SECRET-ONE</Message></Error>", "HTTP 403 (Forbidden)")]
 	[InlineData(HttpStatusCode.Found, "", "HTTP 302 (Found)")]

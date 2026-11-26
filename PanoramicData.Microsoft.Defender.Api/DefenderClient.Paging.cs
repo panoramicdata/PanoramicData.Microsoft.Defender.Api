@@ -84,6 +84,12 @@ public sealed partial class DefenderClient
 			throw new DefenderLinkException($"The next link points to {link.Scheme}://{link.Host}:{link.Port}, not to {BaseAddress.Scheme}://{BaseAddress.Host}:{BaseAddress.Port}; it was not followed.");
 		}
 
+		// HttpClient never sends user info, but request logs and refusal messages that name the URL would show it.
+		if (link.UserInfo.Length > 0)
+		{
+			throw new DefenderLinkException("The next link contains credentials; it was not followed.");
+		}
+
 		return link;
 	}
 }

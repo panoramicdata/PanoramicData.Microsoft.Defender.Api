@@ -57,6 +57,9 @@ public sealed partial class DefenderClient
 			throw new DefenderLinkException("An export file link is not an absolute https URL.");
 		}
 
-		return uri;
+		// Signed links carry the signature in the query; user info is never legitimate, and would be logged with the path.
+		return uri.UserInfo.Length > 0
+			? throw new DefenderLinkException("An export file link contains credentials.")
+			: uri;
 	}
 }

@@ -77,6 +77,22 @@ public class PagingTests
 		stub.Calls.Should().BeEmpty("the bearer token must never leave the configured host");
 	}
 
+	/// <summary>User info is never sent, but the request log and error messages would show it with the URL.</summary>
+	[Fact]
+	public async Task GetNextPage_RefusesALinkWithCredentials_BeforeSendingOrLoggingAnything()
+	{
+		var stub = new StubHandler();
+		var logger = new Support.CapturingLogger();
+		using var client = TestClient.Create(stub, o => o.Logger = logger);
+
+		var act = () => client.GetNextPageAsync(new ODataPage<Vulnerability> { NextLink = "https://user:hunter2@defender.test/api/vulnerabilities?$skiptoken=abc" }, Ct);
+
+		var thrown = await act.Should().ThrowAsync<DefenderLinkException>();
+		thrown.Which.Message.Should().Contain("credentials").And.NotContain("hunter2");
+		stub.Calls.Should().BeEmpty();
+		logger.Messages.Should().NotContain(m => m.Contains("hunter2", StringComparison.Ordinal));
+	}
+
 	[Theory]
 	[InlineData("/api/vulnerabilities?$skiptoken=abc")]
 	[InlineData("not a url")]
