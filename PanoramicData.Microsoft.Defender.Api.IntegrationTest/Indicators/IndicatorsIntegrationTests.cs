@@ -33,16 +33,7 @@ public class IndicatorsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllIndicatorsAsync_ReadsEveryPage()
 	{
-		var seen = 0;
-
-		await foreach (var indicator in fixture.Client.GetAllIndicatorsAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			indicator.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllIndicatorsAsync(new ODataListOptions { Top = 2 }, Ct), 5, indicator => indicator.Id);
 
 		seen.Should().BeGreaterThan(0);
 	}

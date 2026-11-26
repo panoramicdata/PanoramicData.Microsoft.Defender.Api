@@ -46,16 +46,7 @@ public class InvestigationsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllInvestigationsAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var investigation in fixture.Client.GetAllInvestigationsAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			investigation.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllInvestigationsAsync(new ODataListOptions { Top = 2 }, Ct), 5, investigation => investigation.Id);
 
 		seen.Should().BeGreaterThan(0);
 	}
@@ -63,9 +54,7 @@ public class InvestigationsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownInvestigation_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Investigations.GetAsync("0", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Investigations.GetAsync("0", Ct));
 	}
 
 	[Fact]

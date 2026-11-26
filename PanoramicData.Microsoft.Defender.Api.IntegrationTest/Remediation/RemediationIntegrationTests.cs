@@ -61,16 +61,7 @@ public class RemediationIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllRemediationTasksAsync_EnumeratesActivities()
 	{
-		var seen = 0;
-
-		await foreach (var task in fixture.Client.GetAllRemediationTasksAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			task.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 3)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllRemediationTasksAsync(new ODataListOptions { Top = 2 }, Ct), 3, task => task.Id);
 
 		seen.Should().BeGreaterThan(0);
 	}
@@ -78,8 +69,6 @@ public class RemediationIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownActivity_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Remediation.GetAsync("00000000-0000-0000-0000-000000000000", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Remediation.GetAsync("00000000-0000-0000-0000-000000000000", Ct));
 	}
 }

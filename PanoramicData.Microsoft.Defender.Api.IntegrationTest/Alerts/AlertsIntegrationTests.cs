@@ -84,16 +84,7 @@ public class AlertsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllAlertsAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var alert in fixture.Client.GetAllAlertsAsync(new AlertListOptions { Top = 2 }, Ct))
-		{
-			alert.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllAlertsAsync(new AlertListOptions { Top = 2 }, Ct), 5, alert => alert.Id);
 
 		seen.Should().BeGreaterThan(2, "more than one page of two was read, so the next link was followed");
 	}
@@ -101,9 +92,7 @@ public class AlertsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownAlert_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Alerts.GetAsync("da0-unknown", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Alerts.GetAsync("da0-unknown", Ct));
 	}
 
 	[Fact]

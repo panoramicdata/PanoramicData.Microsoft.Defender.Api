@@ -57,16 +57,7 @@ public class MachineActionsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllMachineActionsAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var action in fixture.Client.GetAllMachineActionsAsync(new ODataListOptions { Top = 1 }, Ct))
-		{
-			action.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 3)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllMachineActionsAsync(new ODataListOptions { Top = 1 }, Ct), 3, action => action.Id);
 
 		seen.Should().BeGreaterThan(1, "more than one page of one was read, so the next link was followed (needs at least two actions)");
 	}
@@ -74,9 +65,7 @@ public class MachineActionsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownAction_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.MachineActions.GetAsync(MissingId, Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.MachineActions.GetAsync(MissingId, Ct));
 	}
 
 	[Fact]

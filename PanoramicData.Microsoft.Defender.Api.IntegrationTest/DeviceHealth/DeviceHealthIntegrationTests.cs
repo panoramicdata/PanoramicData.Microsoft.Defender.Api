@@ -32,16 +32,7 @@ public class DeviceHealthIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllAntivirusHealthAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var health in fixture.Client.GetAllAntivirusHealthAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			health.MachineId.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllAntivirusHealthAsync(new ODataListOptions { Top = 2 }, Ct), 5, health => health.MachineId);
 
 		seen.Should().BeGreaterThan(0);
 	}

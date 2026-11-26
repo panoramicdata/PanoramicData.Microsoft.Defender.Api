@@ -100,16 +100,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllSoftwareAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var product in fixture.Client.GetAllSoftwareAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			product.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllSoftwareAsync(new ODataListOptions { Top = 2 }, Ct), 5, product => product.Id);
 
 		seen.Should().BeGreaterThan(2, "more than one page of two was read, so the next link was followed");
 	}
@@ -117,8 +108,6 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownProduct_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Software.GetAsync("no-such-_-product", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Software.GetAsync("no-such-_-product", Ct));
 	}
 }

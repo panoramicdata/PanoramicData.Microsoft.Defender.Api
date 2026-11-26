@@ -70,16 +70,7 @@ public class VulnerabilitiesIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllVulnerabilitiesAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var vulnerability in fixture.Client.GetAllVulnerabilitiesAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			vulnerability.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllVulnerabilitiesAsync(new ODataListOptions { Top = 2 }, Ct), 5, vulnerability => vulnerability.Id);
 
 		seen.Should().BeGreaterThan(2, "more than one page of two was read, so the next link was followed");
 	}
@@ -87,8 +78,6 @@ public class VulnerabilitiesIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownCve_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Vulnerabilities.GetAsync("CVE-0000-0000", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Vulnerabilities.GetAsync("CVE-0000-0000", Ct));
 	}
 }
