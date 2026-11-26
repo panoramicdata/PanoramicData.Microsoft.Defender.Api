@@ -17,19 +17,17 @@ public class MachineActionsIntegrationTests(DefenderFixture fixture)
 	private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
 	private async Task<MachineAction> FirstActionAsync()
-	{
-		var page = await fixture.Client.MachineActions.ListAsync(new ODataListOptions { Top = 10 }, Ct);
-		return page.Value.FirstOrDefault(a => !string.IsNullOrEmpty(a.Id))
-			?? throw new InvalidOperationException("The tenant has no machine actions, so the operations cannot be checked. Use a tenant where an action has been requested at some point.");
-	}
+		=> LiveChecks.FirstOrThrow(
+			await fixture.Client.MachineActions.ListAsync(new ODataListOptions { Top = 10 }, Ct),
+			a => !string.IsNullOrEmpty(a.Id),
+			"The tenant has no machine actions, so the operations cannot be checked. Use a tenant where an action has been requested at some point.");
 
 	[Fact]
 	public async Task ListAsync_ReturnsAPageOfActions()
 	{
 		var page = await fixture.Client.MachineActions.ListAsync(new ODataListOptions { Top = 5 }, Ct);
 
-		page.Value.Should().NotBeEmpty().And.HaveCountLessThanOrEqualTo(5);
-		page.Value.Should().OnlyContain(a => !string.IsNullOrEmpty(a.Id) && !string.IsNullOrEmpty(a.Type));
+		LiveChecks.ShouldBeACompletePage(page, 5, a => !string.IsNullOrEmpty(a.Id) && !string.IsNullOrEmpty(a.Type));
 	}
 
 	[Fact]
@@ -71,9 +69,6 @@ public class MachineActionsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnAction_IsRefusedBeforeItIsSent_OnTheReadOnlyClient()
 	{
-		// A made-up id, so that nothing real could be touched even if the guard failed.
-		var act = () => fixture.Client.MachineActions.IsolateAsync("0000000000000000000000000000000000000000", new IsolateRequest { Comment = "must never be sent" }, Ct);
-
-		await act.Should().ThrowAsync<DefenderReadOnlyException>();
+		await LiveChecks.ShouldBeRefusedAsReadOnlyAsync(() => fixture.Client.MachineActions.IsolateAsync("0000000000000000000000000000000000000000", new IsolateRequest { Comment = "must never be sent" }, Ct));
 	}
 }

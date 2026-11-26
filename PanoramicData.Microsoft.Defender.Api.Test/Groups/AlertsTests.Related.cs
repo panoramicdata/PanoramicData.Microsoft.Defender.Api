@@ -1,3 +1,4 @@
+using PanoramicData.MicrosoftDefender.Api.Models.Machines;
 using PanoramicData.MicrosoftDefender.Api.Test.Support;
 using System.Net;
 
@@ -89,7 +90,7 @@ public partial class AlertsTests
 
 		(m.Id, m.ComputerDnsName, m.OsPlatform, m.OsProcessor, m.Version, m.LastIpAddress, m.LastExternalIpAddress, m.OsBuild)
 			.Should().Be(("m1", "pc-01.example.test", "Windows11", "x64", "24H2", "192.0.2.2", "203.0.113.9", 26100L));
-		(m.HealthStatus, m.DeviceValue, m.RbacGroupName, m.RiskScore, m.ExposureLevel, m.AadDeviceId).Should().Be(("Active", "Normal", "GroupA", "Low", "Medium", "aad-1"));
+		(m.HealthStatus, m.DeviceValue, m.RbacGroupName, m.RiskScore, m.ExposureLevel, m.AadDeviceId).Should().Be(("Active", MachineDeviceValue.Normal, "GroupA", "Low", "Medium", "aad-1"));
 		m.FirstSeen.Should().Be(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 		m.LastSeen.Should().Be(new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero));
 		m.MachineTags.Should().Equal("t1", "t2");

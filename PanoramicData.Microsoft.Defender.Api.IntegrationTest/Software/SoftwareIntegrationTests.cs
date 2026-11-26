@@ -14,11 +14,10 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
 	private async Task<SoftwareProduct> FirstExposedAsync()
-	{
-		var page = await fixture.Client.Software.ListAsync(new ODataListOptions { Top = 100 }, Ct);
-		return page.Value.FirstOrDefault(p => p.ExposedMachines > 0)
-			?? throw new InvalidOperationException("The tenant reports no software with exposed devices among the first 100, so the by-product operations cannot be checked. Use a tenant with onboarded devices.");
-	}
+		=> LiveChecks.FirstOrThrow(
+			await fixture.Client.Software.ListAsync(new ODataListOptions { Top = 100 }, Ct),
+			p => p.ExposedMachines > 0,
+			"The tenant reports no software with exposed devices among the first 100, so the by-product operations cannot be checked. Use a tenant with onboarded devices.");
 
 	/// <summary>An OData filter matching one vendor exactly; a single quote in the name is escaped by doubling it.</summary>
 	private static string VendorFilter(string vendor)
@@ -32,8 +31,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	{
 		var page = await fixture.Client.Software.ListAsync(new ODataListOptions { Top = 5 }, Ct);
 
-		page.Value.Should().NotBeEmpty().And.HaveCountLessThanOrEqualTo(5);
-		page.Value.Should().OnlyContain(p => !string.IsNullOrEmpty(p.Id) && !string.IsNullOrEmpty(p.Name));
+		LiveChecks.ShouldBeACompletePage(page, 5, p => !string.IsNullOrEmpty(p.Id) && !string.IsNullOrEmpty(p.Name));
 	}
 
 	[Fact]
@@ -62,9 +60,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	{
 		var listed = await FirstExposedAsync();
 
-		var page = await fixture.Client.Software.ListDistributionsAsync(listed.Id!, Ct);
-
-		page.Value.Should().NotBeEmpty().And.OnlyContain(d => !string.IsNullOrEmpty(d.Version));
+		await LiveChecks.ShouldListIdentifiedItemsAsync(fixture.Client.Software.ListDistributionsAsync, listed.Id!, d => d.Version, Ct, requireItems: true);
 	}
 
 	[Fact]
@@ -72,9 +68,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	{
 		var listed = await FirstExposedAsync();
 
-		var page = await fixture.Client.Software.ListMachineReferencesAsync(listed.Id!, Ct);
-
-		page.Value.Should().NotBeEmpty().And.OnlyContain(m => !string.IsNullOrEmpty(m.Id));
+		await LiveChecks.ShouldListIdentifiedItemsAsync(fixture.Client.Software.ListMachineReferencesAsync, listed.Id!, m => m.Id, Ct, requireItems: true);
 	}
 
 	[Fact]
@@ -82,9 +76,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	{
 		var listed = await FirstExposedAsync();
 
-		var page = await fixture.Client.Software.ListVulnerabilitiesAsync(listed.Id!, Ct);
-
-		page.Value.Should().OnlyContain(v => !string.IsNullOrEmpty(v.Id));
+		await LiveChecks.ShouldListIdentifiedItemsAsync(fixture.Client.Software.ListVulnerabilitiesAsync, listed.Id!, v => v.Id, Ct);
 	}
 
 	[Fact]
@@ -92,9 +84,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	{
 		var listed = await FirstExposedAsync();
 
-		var page = await fixture.Client.Software.ListMissingKbsAsync(listed.Id!, Ct);
-
-		page.Value.Should().OnlyContain(kb => !string.IsNullOrEmpty(kb.Id));
+		await LiveChecks.ShouldListIdentifiedItemsAsync(fixture.Client.Software.ListMissingKbsAsync, listed.Id!, kb => kb.Id, Ct);
 	}
 
 	[Fact]

@@ -1,5 +1,6 @@
 using PanoramicData.MicrosoftDefender.Api.Models;
 using PanoramicData.MicrosoftDefender.Api.Models.Alerts;
+using PanoramicData.MicrosoftDefender.Api.Models.Machines;
 using Refit;
 
 namespace PanoramicData.MicrosoftDefender.Api.Interfaces;
@@ -85,7 +86,7 @@ public interface IAlertsApi
 	/// <param name="cancellationToken">A cancellation token.</param>
 	/// <returns>The device.</returns>
 	[Get("alerts/{id}/machine")]
-	Task<AlertMachine> GetMachineAsync(string id, CancellationToken cancellationToken);
+	Task<Machine> GetMachineAsync(string id, CancellationToken cancellationToken);
 
 	/// <summary>Gets the user related to an alert (<c>GET alerts/{id}/user</c>; <c>User.Read.All</c>); 404 when the alert or user is missing.</summary>
 	/// <param name="id">The alert id.</param>
