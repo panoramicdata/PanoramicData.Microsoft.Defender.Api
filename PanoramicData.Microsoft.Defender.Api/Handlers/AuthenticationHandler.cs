@@ -81,7 +81,8 @@ internal sealed class AuthenticationHandler : DelegatingHandler
 	private string? Usable(CachedToken? cached, string? staleToken)
 		=> cached is not null
 			&& cached.Value != staleToken
-			&& cached.ExpiresOn - _refreshMargin > _timeProvider.GetUtcNow()
+			// Compared as a remaining lifetime: subtracting the margin from the date would overflow for a huge margin.
+			&& cached.ExpiresOn - _timeProvider.GetUtcNow() > _refreshMargin
 			? cached.Value
 			: null;
 

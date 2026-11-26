@@ -32,7 +32,7 @@ public sealed partial class DefenderClient
 		foreach (var link in links)
 		{
 			using var response = await _downloadClient.GetAsync(link, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-			if (await DefenderErrorMapper.CreateAsync(response, _timeProvider).ConfigureAwait(false) is { } error)
+			if (await DefenderErrorMapper.CreateAsync(response, _timeProvider, cancellationToken).ConfigureAwait(false) is { } error)
 			{
 				throw error;
 			}
@@ -57,6 +57,9 @@ public sealed partial class DefenderClient
 			throw new DefenderLinkException("An export file link is not an absolute https URL.");
 		}
 
-		return uri;
+		// Signed links carry the signature in the query; user info is never legitimate, and would be logged with the path.
+		return uri.UserInfo.Length > 0
+			? throw new DefenderLinkException("An export file link contains credentials.")
+			: uri;
 	}
 }

@@ -118,6 +118,33 @@ public class RequestEncodingTests
 		stub.Calls[0].Uri.AbsolutePath.Should().Be("/api/probe/a%2Fb%20c");
 	}
 
+	/// <summary>A segment of "." or ".." is collapsed by URI parsing, silently turning the call into one on another path.</summary>
+	[Theory]
+	[InlineData(".")]
+	[InlineData("..")]
+	public async Task PathParameters_OfDotSegments_AreRefused_BeforeAnythingIsSent(string name)
+	{
+		var (probe, stub) = Create();
+
+		var act = () => probe.NamedAsync(name, TestContext.Current.CancellationToken);
+
+		(await act.Should().ThrowAsync<ArgumentException>()).Which.Message.Should().Contain("'..'");
+		stub.Calls.Should().BeEmpty();
+	}
+
+	[Theory]
+	[InlineData("...", "/api/probe/...")]
+	[InlineData("a.b", "/api/probe/a.b")]
+	[InlineData(".x", "/api/probe/.x")]
+	public async Task PathParameters_ContainingDots_AreKept(string name, string path)
+	{
+		var (probe, stub) = Create();
+
+		await probe.NamedAsync(name, TestContext.Current.CancellationToken);
+
+		stub.Calls[0].Uri.AbsolutePath.Should().Be(path);
+	}
+
 	[Fact]
 	public async Task Body_IsSentAsJson_WithExplicitCaseSensitiveNames_AndNullsOmitted()
 	{
