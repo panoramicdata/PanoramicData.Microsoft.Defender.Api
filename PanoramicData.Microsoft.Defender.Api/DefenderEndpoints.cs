@@ -7,7 +7,7 @@ public static class DefenderEndpoints
 	/// The default token scope. Some of the API's operations still expect a token issued for this older audience and answer
 	/// 403 for a token issued for another, even on the <c>api.security.microsoft.com</c> hosts.
 	/// </summary>
-	public const string DefaultScope = "https://api.securitycenter.microsoft.com/.default";
+	public static string DefaultScope => "https://api.securitycenter.microsoft.com/.default";
 
 	/// <summary>The base address of the API in <paramref name="cloud"/>, with the <c>/api</c> prefix every operation path follows.</summary>
 	/// <param name="cloud">The cloud or region.</param>

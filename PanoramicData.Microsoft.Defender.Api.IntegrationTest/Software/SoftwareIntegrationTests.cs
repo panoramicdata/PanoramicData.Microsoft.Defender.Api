@@ -20,6 +20,13 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 			?? throw new InvalidOperationException("The tenant reports no software with exposed devices among the first 100, so the by-product operations cannot be checked. Use a tenant with onboarded devices.");
 	}
 
+	/// <summary>An OData filter matching one vendor exactly; a single quote in the name is escaped by doubling it.</summary>
+	private static string VendorFilter(string vendor)
+	{
+		var escaped = vendor.Replace("'", "''", StringComparison.Ordinal);
+		return string.Concat("vendor eq '", escaped, "'");
+	}
+
 	[Fact]
 	public async Task ListAsync_ReturnsAPageOfProducts()
 	{
@@ -34,7 +41,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	{
 		var first = await FirstExposedAsync();
 
-		var page = await fixture.Client.Software.ListAsync(new ODataListOptions { Filter = $"vendor eq '{first.Vendor!.Replace("'", "''", StringComparison.Ordinal)}'", Top = 5 }, Ct);
+		var page = await fixture.Client.Software.ListAsync(new ODataListOptions { Filter = VendorFilter(first.Vendor!), Top = 5 }, Ct);
 
 		page.Value.Should().NotBeEmpty().And.OnlyContain(p => p.Vendor == first.Vendor);
 	}
@@ -93,16 +100,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllSoftwareAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var product in fixture.Client.GetAllSoftwareAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			product.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllSoftwareAsync(new ODataListOptions { Top = 2 }, Ct), 5, product => product.Id);
 
 		seen.Should().BeGreaterThan(2, "more than one page of two was read, so the next link was followed");
 	}
@@ -110,8 +108,6 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownProduct_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Software.GetAsync("no-such-_-product", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Software.GetAsync("no-such-_-product", Ct));
 	}
 }

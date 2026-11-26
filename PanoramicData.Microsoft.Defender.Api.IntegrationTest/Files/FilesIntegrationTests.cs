@@ -60,8 +60,6 @@ public class FilesIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownHash_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Files.GetAsync("0000000000000000000000000000000000000000", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Files.GetAsync("0000000000000000000000000000000000000000", Ct));
 	}
 }

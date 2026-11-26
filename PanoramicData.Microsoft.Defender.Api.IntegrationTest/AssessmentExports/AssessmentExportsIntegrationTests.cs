@@ -89,16 +89,7 @@ public class AssessmentExportsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllSoftwareInventoryAssessments_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var record in fixture.Client.GetAllSoftwareInventoryAssessmentsAsync(new ExportByMachineOptions { PageSize = 2 }, Ct))
-		{
-			record.DeviceId.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllSoftwareInventoryAssessmentsAsync(new ExportByMachineOptions { PageSize = 2 }, Ct), 5, record => record.DeviceId);
 
 		seen.Should().BeGreaterThan(2, "more than one page of two was read, so the next link was followed");
 	}

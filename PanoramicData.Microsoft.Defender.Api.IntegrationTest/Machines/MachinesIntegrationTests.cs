@@ -136,16 +136,7 @@ public class MachinesIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllMachinesAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var machine in fixture.Client.GetAllMachinesAsync(new ODataListOptions { Top = 1 }, Ct))
-		{
-			machine.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 3)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllMachinesAsync(new ODataListOptions { Top = 1 }, Ct), 3, machine => machine.Id);
 
 		seen.Should().BeGreaterThan(1, "more than one page of one was read, so the next link was followed (needs at least two devices)");
 	}
@@ -153,9 +144,7 @@ public class MachinesIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownMachine_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Machines.GetAsync("0000000000000000000000000000000000000000", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Machines.GetAsync("0000000000000000000000000000000000000000", Ct));
 	}
 
 	[Fact]

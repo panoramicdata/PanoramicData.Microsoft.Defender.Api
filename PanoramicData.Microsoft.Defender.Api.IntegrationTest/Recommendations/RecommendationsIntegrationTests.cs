@@ -81,16 +81,7 @@ public class RecommendationsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task GetAllRecommendationsAsync_FollowsTheNextLink()
 	{
-		var seen = 0;
-
-		await foreach (var recommendation in fixture.Client.GetAllRecommendationsAsync(new ODataListOptions { Top = 2 }, Ct))
-		{
-			recommendation.Id.Should().NotBeNullOrEmpty();
-			if (++seen == 5)
-			{
-				break;
-			}
-		}
+		var seen = await LiveChecks.CountAsync(fixture.Client.GetAllRecommendationsAsync(new ODataListOptions { Top = 2 }, Ct), 5, recommendation => recommendation.Id);
 
 		seen.Should().BeGreaterThan(2, "more than one page of two was read, so the next link was followed");
 	}
@@ -98,8 +89,6 @@ public class RecommendationsIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownRecommendation_IsRaisedAsAnApiException()
 	{
-		var act = () => fixture.Client.Recommendations.GetAsync("va-_-no-such-_-product", Ct);
-
-		(await act.Should().ThrowAsync<DefenderApiException>()).Which.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Recommendations.GetAsync("va-_-no-such-_-product", Ct));
 	}
 }

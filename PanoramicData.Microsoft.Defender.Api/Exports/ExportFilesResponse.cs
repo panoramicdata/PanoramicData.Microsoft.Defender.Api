@@ -24,11 +24,19 @@ public class ExportFilesResponse
 	/// <summary>Reads the list when it arrives under the spelling <c>Export files</c>.</summary>
 	[JsonInclude]
 	[JsonPropertyName("Export files")]
-	private IReadOnlyList<string> ExportFilesWithSpace
+	[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+	private IReadOnlyList<string>? ExportFilesWithSpace
 	{
-		// Write-only: the canonical spelling is the one that is written back. (A JSON null never reaches this setter: the
-		// serializer keeps a collection's default on null.)
-		set => ExportFiles = value;
+		// The getter is always null, so the property is never written back: the canonical spelling is the only one emitted.
+		get => null;
+		set
+		{
+			// A JSON null leaves the list as it was.
+			if (value is not null)
+			{
+				ExportFiles = value;
+			}
+		}
 	}
 
 	/// <summary>Describes the response without revealing any link.</summary>

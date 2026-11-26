@@ -209,9 +209,16 @@ public partial class AuthenticationHandlerTests
 
 	private sealed class ThrowingCredential(Func<Azure.Core.AccessToken> next) : Azure.Core.TokenCredential
 	{
-		public override Azure.Core.AccessToken GetToken(Azure.Core.TokenRequestContext requestContext, CancellationToken cancellationToken) => next();
+		public override Azure.Core.AccessToken GetToken(Azure.Core.TokenRequestContext requestContext, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			return next();
+		}
 
 		public override ValueTask<Azure.Core.AccessToken> GetTokenAsync(Azure.Core.TokenRequestContext requestContext, CancellationToken cancellationToken)
-			=> ValueTask.FromResult(next());
+		{
+			ArgumentNullException.ThrowIfNull(requestContext.Scopes);
+			return ValueTask.FromResult(next());
+		}
 	}
 }
