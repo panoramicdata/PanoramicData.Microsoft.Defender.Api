@@ -35,9 +35,7 @@ public class MachineActionsIntegrationTests(DefenderFixture fixture)
 	{
 		var first = await FirstActionAsync();
 
-		var page = await fixture.Client.MachineActions.ListAsync(new ODataListOptions { Filter = $"id eq '{first.Id}'" }, Ct);
-
-		page.Value.Should().ContainSingle().Which.Id.Should().Be(first.Id);
+		await LiveChecks.ShouldHonourAnIdFilterAsync(fixture.Client.MachineActions.ListAsync, first.Id!, a => a.Id, Ct);
 	}
 
 	[Fact]

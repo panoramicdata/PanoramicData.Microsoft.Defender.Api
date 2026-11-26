@@ -38,6 +38,13 @@ internal static class LiveChecks
 
 	/// <summary>Checks that the call is refused by the read-only client before anything is sent.</summary>
 	/// <param name="call">The write call, aimed at a made-up identifier so that nothing real could be touched even if the guard failed.</param>
+	public static async Task ShouldHonourAnIdFilterAsync<T>(Func<ODataListOptions, CancellationToken, Task<ODataPage<T>>> list, string id, Func<T, string?> identifier, CancellationToken cancellationToken)
+	{
+		var page = await list(new ODataListOptions { Filter = $"id eq '{id}'" }, cancellationToken);
+
+		page.Value.Select(identifier).Should().ContainSingle().Which.Should().Be(id);
+	}
+
 	public static async Task ShouldBeRefusedAsReadOnlyAsync(Func<Task> call)
 		=> await call.Should().ThrowAsync<DefenderReadOnlyException>();
 
