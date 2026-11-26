@@ -12,13 +12,22 @@ namespace PanoramicData.MicrosoftDefender.Api.IntegrationTest.Machines;
 [Collection(DefenderTestGroup.Name)]
 public class MachinesIntegrationTests(DefenderFixture fixture)
 {
+	private const string MissingId = "0000000000000000000000000000000000000000";
+
 	private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
 	private async Task<Machine> FirstMachineAsync()
+		=> LiveChecks.FirstOrThrow(
+			await fixture.Client.Machines.ListAsync(new ODataListOptions { Top = 10 }, Ct),
+			m => !string.IsNullOrEmpty(m.Id),
+			"The tenant reports no devices, so the per-device operations cannot be checked. Use a tenant with onboarded devices.");
+
+	/// <summary>Runs a per-device list operation against the first device and checks every item it returns has an identifier.</summary>
+	private async Task ShouldListIdentifiedItemsAsync<T>(Func<string, CancellationToken, Task<ODataPage<T>>> list, Func<T, string?> identifier)
 	{
-		var page = await fixture.Client.Machines.ListAsync(new ODataListOptions { Top = 10 }, Ct);
-		return page.Value.FirstOrDefault(m => !string.IsNullOrEmpty(m.Id))
-			?? throw new InvalidOperationException("The tenant reports no devices, so the per-device operations cannot be checked. Use a tenant with onboarded devices.");
+		var machine = await FirstMachineAsync();
+
+		await LiveChecks.ShouldListIdentifiedItemsAsync(list, machine.Id!, identifier, Ct);
 	}
 
 	[Fact]
@@ -26,8 +35,7 @@ public class MachinesIntegrationTests(DefenderFixture fixture)
 	{
 		var page = await fixture.Client.Machines.ListAsync(new ODataListOptions { Top = 5 }, Ct);
 
-		page.Value.Should().NotBeEmpty().And.HaveCountLessThanOrEqualTo(5);
-		page.Value.Should().OnlyContain(m => !string.IsNullOrEmpty(m.Id) && !string.IsNullOrEmpty(m.ComputerDnsName));
+		LiveChecks.ShouldBeACompletePage(page, 5, m => !string.IsNullOrEmpty(m.Id) && !string.IsNullOrEmpty(m.ComputerDnsName));
 	}
 
 	[Fact]
@@ -52,24 +60,12 @@ public class MachinesIntegrationTests(DefenderFixture fixture)
 	}
 
 	[Fact]
-	public async Task ListLogOnUsersAsync_ReturnsUsers()
-	{
-		var machine = await FirstMachineAsync();
-
-		var page = await fixture.Client.Machines.ListLogOnUsersAsync(machine.Id!, Ct);
-
-		page.Value.Should().OnlyContain(u => !string.IsNullOrEmpty(u.Id));
-	}
+	public Task ListLogOnUsersAsync_ReturnsUsers()
+		=> ShouldListIdentifiedItemsAsync(fixture.Client.Machines.ListLogOnUsersAsync, u => u.Id);
 
 	[Fact]
-	public async Task ListAlertsAsync_ReturnsAlerts()
-	{
-		var machine = await FirstMachineAsync();
-
-		var page = await fixture.Client.Machines.ListAlertsAsync(machine.Id!, Ct);
-
-		page.Value.Should().OnlyContain(a => !string.IsNullOrEmpty(a.Id));
-	}
+	public Task ListAlertsAsync_ReturnsAlerts()
+		=> ShouldListIdentifiedItemsAsync(fixture.Client.Machines.ListAlertsAsync, a => a.Id);
 
 	[Fact]
 	public async Task FindByIpAsync_FindsTheDeviceByItsLastIp()
@@ -85,8 +81,10 @@ public class MachinesIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task FindByTagAsync_FindsATaggedDevice()
 	{
-		var tagged = (await fixture.Client.Machines.ListAsync(new ODataListOptions { Top = 1000 }, Ct)).Value.FirstOrDefault(m => m.MachineTags.Count > 0)
-			?? throw new InvalidOperationException("No device among the first 1000 carries a tag, so find-by-tag cannot be checked. Tag a device first.");
+		var tagged = LiveChecks.FirstOrThrow(
+			await fixture.Client.Machines.ListAsync(new ODataListOptions { Top = 1000 }, Ct),
+			m => m.MachineTags.Count > 0,
+			"No device among the first 1000 carries a tag, so find-by-tag cannot be checked. Tag a device first.");
 
 		var page = await fixture.Client.Machines.FindByTagAsync(tagged.MachineTags[0], new FindByTagOptions { UseStartsWithFilter = false }, Ct);
 
@@ -94,44 +92,20 @@ public class MachinesIntegrationTests(DefenderFixture fixture)
 	}
 
 	[Fact]
-	public async Task ListVulnerabilitiesAsync_ReturnsVulnerabilities()
-	{
-		var machine = await FirstMachineAsync();
-
-		var page = await fixture.Client.Machines.ListVulnerabilitiesAsync(machine.Id!, Ct);
-
-		page.Value.Should().OnlyContain(v => !string.IsNullOrEmpty(v.Id));
-	}
+	public Task ListVulnerabilitiesAsync_ReturnsVulnerabilities()
+		=> ShouldListIdentifiedItemsAsync(fixture.Client.Machines.ListVulnerabilitiesAsync, v => v.Id);
 
 	[Fact]
-	public async Task ListSoftwareAsync_ReturnsSoftware()
-	{
-		var machine = await FirstMachineAsync();
-
-		var page = await fixture.Client.Machines.ListSoftwareAsync(machine.Id!, Ct);
-
-		page.Value.Should().OnlyContain(s => !string.IsNullOrEmpty(s.Id));
-	}
+	public Task ListSoftwareAsync_ReturnsSoftware()
+		=> ShouldListIdentifiedItemsAsync(fixture.Client.Machines.ListSoftwareAsync, s => s.Id);
 
 	[Fact]
-	public async Task ListMissingKbsAsync_ReturnsKbs()
-	{
-		var machine = await FirstMachineAsync();
-
-		var page = await fixture.Client.Machines.ListMissingKbsAsync(machine.Id!, Ct);
-
-		page.Value.Should().OnlyContain(k => !string.IsNullOrEmpty(k.Id));
-	}
+	public Task ListMissingKbsAsync_ReturnsKbs()
+		=> ShouldListIdentifiedItemsAsync(fixture.Client.Machines.ListMissingKbsAsync, k => k.Id);
 
 	[Fact]
-	public async Task ListRecommendationsAsync_ReturnsRecommendations()
-	{
-		var machine = await FirstMachineAsync();
-
-		var page = await fixture.Client.Machines.ListRecommendationsAsync(machine.Id!, Ct);
-
-		page.Value.Should().OnlyContain(r => !string.IsNullOrEmpty(r.Id));
-	}
+	public Task ListRecommendationsAsync_ReturnsRecommendations()
+		=> ShouldListIdentifiedItemsAsync(fixture.Client.Machines.ListRecommendationsAsync, r => r.Id);
 
 	[Fact]
 	public async Task GetAllMachinesAsync_FollowsTheNextLink()
@@ -144,15 +118,12 @@ public class MachinesIntegrationTests(DefenderFixture fixture)
 	[Fact]
 	public async Task AnUnknownMachine_IsRaisedAsAnApiException()
 	{
-		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Machines.GetAsync("0000000000000000000000000000000000000000", Ct));
+		await LiveChecks.ShouldBeNotFoundAsync(() => fixture.Client.Machines.GetAsync(MissingId, Ct));
 	}
 
 	[Fact]
 	public async Task AWrite_IsRefusedBeforeItIsSent_OnTheReadOnlyClient()
 	{
-		// A made-up id, so that nothing real could be touched even if the guard failed.
-		var act = () => fixture.Client.Machines.SetDeviceValueAsync("0000000000000000000000000000000000000000", new SetDeviceValueRequest { DeviceValue = MachineDeviceValue.Normal }, Ct);
-
-		await act.Should().ThrowAsync<DefenderReadOnlyException>();
+		await LiveChecks.ShouldBeRefusedAsReadOnlyAsync(() => fixture.Client.Machines.SetDeviceValueAsync(MissingId, new SetDeviceValueRequest { DeviceValue = MachineDeviceValue.Normal }, Ct));
 	}
 }

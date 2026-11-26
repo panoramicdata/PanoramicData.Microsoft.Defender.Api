@@ -14,19 +14,17 @@ public class RecommendationsIntegrationTests(DefenderFixture fixture)
 	private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
 	private async Task<Recommendation> FirstApplicationAsync()
-	{
-		var page = await fixture.Client.Recommendations.ListAsync(new ODataListOptions { Filter = "recommendationCategory eq 'Application'", Top = 50 }, Ct);
-		return page.Value.FirstOrDefault(r => r.ExposedMachinesCount > 0)
-			?? throw new InvalidOperationException("The tenant reports no application recommendation with exposed devices, so the by-recommendation operations cannot be checked. Use a tenant with onboarded devices.");
-	}
+		=> LiveChecks.FirstOrThrow(
+			await fixture.Client.Recommendations.ListAsync(new ODataListOptions { Filter = "recommendationCategory eq 'Application'", Top = 50 }, Ct),
+			r => r.ExposedMachinesCount > 0,
+			"The tenant reports no application recommendation with exposed devices, so the by-recommendation operations cannot be checked. Use a tenant with onboarded devices.");
 
 	[Fact]
 	public async Task ListAsync_ReturnsAPageOfRecommendations()
 	{
 		var page = await fixture.Client.Recommendations.ListAsync(new ODataListOptions { Top = 5 }, Ct);
 
-		page.Value.Should().NotBeEmpty().And.HaveCountLessThanOrEqualTo(5);
-		page.Value.Should().OnlyContain(r => !string.IsNullOrEmpty(r.Id) && !string.IsNullOrEmpty(r.RecommendationName));
+		LiveChecks.ShouldBeACompletePage(page, 5, r => !string.IsNullOrEmpty(r.Id) && !string.IsNullOrEmpty(r.RecommendationName));
 	}
 
 	[Fact]
@@ -53,9 +51,7 @@ public class RecommendationsIntegrationTests(DefenderFixture fixture)
 	{
 		var listed = await FirstApplicationAsync();
 
-		var page = await fixture.Client.Recommendations.ListMachineReferencesAsync(listed.Id!, Ct);
-
-		page.Value.Should().NotBeEmpty().And.OnlyContain(m => !string.IsNullOrEmpty(m.Id));
+		await LiveChecks.ShouldListIdentifiedItemsAsync(fixture.Client.Recommendations.ListMachineReferencesAsync, listed.Id!, m => m.Id, Ct, requireItems: true);
 	}
 
 	[Fact]
@@ -63,9 +59,7 @@ public class RecommendationsIntegrationTests(DefenderFixture fixture)
 	{
 		var listed = await FirstApplicationAsync();
 
-		var page = await fixture.Client.Recommendations.ListVulnerabilitiesAsync(listed.Id!, Ct);
-
-		page.Value.Should().OnlyContain(v => !string.IsNullOrEmpty(v.Id));
+		await LiveChecks.ShouldListIdentifiedItemsAsync(fixture.Client.Recommendations.ListVulnerabilitiesAsync, listed.Id!, v => v.Id, Ct);
 	}
 
 	[Fact]
