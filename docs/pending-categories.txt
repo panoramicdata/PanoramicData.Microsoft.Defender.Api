@@ -1,9 +1,5 @@
-alerts
 machines
 machine-actions
-investigations
-indicators
-library
 files
 domains
 ips
