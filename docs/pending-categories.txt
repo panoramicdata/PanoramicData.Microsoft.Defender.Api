@@ -4,11 +4,6 @@ machine-actions
 investigations
 indicators
 library
-files
-domains
-ips
-users
-advanced-hunting
 software
 recommendations
 scores
@@ -17,4 +12,3 @@ assessment-exports
 device-health
 browser-extensions
 security-baselines
-authenticated-scan
