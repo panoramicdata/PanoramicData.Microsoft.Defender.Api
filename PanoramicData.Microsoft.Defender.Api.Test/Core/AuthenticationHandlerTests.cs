@@ -102,6 +102,19 @@ public partial class AuthenticationHandlerTests
 		harness.Credential.Issued.Should().Be(1);
 	}
 
+	/// <summary>A margin longer than any token lifetime means "never reuse a token"; it must not overflow the date arithmetic.</summary>
+	[Fact]
+	public async Task AHugeRefreshMargin_NeverReusesAToken_WithoutOverflowing()
+	{
+		using var harness = new Harness(o => o.TokenRefreshMargin = TimeSpan.MaxValue).Respond(HttpStatusCode.OK, HttpStatusCode.OK);
+
+		(await harness.SendAsync()).Dispose();
+		(await harness.SendAsync()).Dispose();
+
+		harness.Credential.Issued.Should().Be(2);
+		harness.Stub.Calls.Select(c => c.Authorization).Should().Equal("Bearer token-1", "Bearer token-2");
+	}
+
 	[Fact]
 	public async Task On401_FetchesANewToken_AndReplaysTheRequestWithItsBody()
 	{
