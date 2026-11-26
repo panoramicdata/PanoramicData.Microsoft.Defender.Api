@@ -17,14 +17,14 @@ IMPORTANT: Apply these in order, most important first.
 
 ## Tools
 
-- You MUST build and test with `dotnet build` / `dotnet test`.
-- You MUST use `git` for version control, following the repository's contributing guidelines where present.
+- IMPORTANT: Build and test with `dotnet build` / `dotnet test`.
+- IMPORTANT: Use `git` for version control, following the repository's contributing guidelines where present.
 
 ## Formatting
 
 - IMPORTANT: Read the repository `.editorconfig` before editing files and follow it, including tabs over spaces where it requires them.
 - IMPORTANT: Preserve the existing indentation style of each file exactly.
-- You MUST use tabs, not spaces, for C#, XML, MSBuild and JSON files, and spaces for YAML, as `.editorconfig` sets.
+- IMPORTANT: Use tabs, not spaces, for C#, XML, MSBuild and JSON files, and spaces for YAML, as `.editorconfig` sets.
 - IMPORTANT: After making edits, fix any formatting issues such as `IDE0055` in modified files before finishing.
 - IMPORTANT: Do not reformat unrelated code.
 

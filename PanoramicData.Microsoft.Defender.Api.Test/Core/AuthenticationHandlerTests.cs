@@ -212,12 +212,14 @@ public partial class AuthenticationHandlerTests
 		public override Azure.Core.AccessToken GetToken(Azure.Core.TokenRequestContext requestContext, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
+			_ = requestContext;
 			return next();
 		}
 
 		public override ValueTask<Azure.Core.AccessToken> GetTokenAsync(Azure.Core.TokenRequestContext requestContext, CancellationToken cancellationToken)
 		{
 			ArgumentNullException.ThrowIfNull(requestContext.Scopes);
+			cancellationToken.ThrowIfCancellationRequested();
 			return ValueTask.FromResult(next());
 		}
 	}
