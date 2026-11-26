@@ -2,4 +2,4 @@
 
 | Method | Path | Client method | Test |
 |---|---|---|---|
-| POST | `/advancedqueries/run` |  |  |
+| POST | `/advancedqueries/run` | `IAdvancedHuntingApi.RunAsync` | `AdvancedHuntingTests.Run_SendsPostAdvancedQueriesRun_WithTheQueryBody` |
