@@ -14,6 +14,9 @@ internal sealed class DefenderUrlParameterFormatter : DefaultUrlParameterFormatt
 		=> parameterValue switch
 		{
 			null => null,
+			// URI parsing collapses a "." or ".." path segment, which would send the call to a different path (the parent
+			// collection, for an id of ".."). Nothing legitimate is spelled this way, in a path or a query.
+			"." or ".." => throw new ArgumentException("A value of '.' or '..' cannot be sent: it would change the request path.", nameof(parameterValue)),
 			bool flag => flag ? "true" : "false",
 			Enum value => WireNames.Of(value),
 			DateTimeOffset date => FormatDate(date),
