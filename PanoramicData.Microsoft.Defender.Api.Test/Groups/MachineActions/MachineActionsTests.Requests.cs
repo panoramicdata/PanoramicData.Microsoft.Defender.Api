@@ -118,37 +118,12 @@ public partial class MachineActionsTests
 			"""{"error":{"code":"ActiveRequestAlreadyExists","message":"A session is active","target":"c"}}""", "A session is active");
 
 	[Fact]
-	public async Task EveryRequest_IsRefusedByAReadOnlyClient_BeforeAnythingIsSent()
-	{
-		foreach (var (name, call) in Requests)
-		{
-			var stub = new StubHandler();
-			using var client = TestClient.Create(stub, o => o.IsReadOnly = true);
-
-			var act = () => call(client, TestContext.Current.CancellationToken);
-
-			await act.Should().ThrowAsync<DefenderReadOnlyException>($"{name} changes state");
-			stub.Calls.Should().BeEmpty(name);
-		}
-	}
+	public Task EveryRequest_IsRefusedByAReadOnlyClient_BeforeAnythingIsSent()
+		=> WriteOperationChecks.ShouldBeRefusedWhenReadOnlyAsync(Requests);
 
 	[Fact]
-	public async Task EveryRequest_ResendsAnIdenticalBodyAfterA401()
-	{
-		foreach (var (name, call) in Requests)
-		{
-			var stub = new StubHandler();
-			stub.Enqueue(HttpStatusCode.Unauthorized);
-			stub.Enqueue(HttpStatusCode.Created, ActionJson);
-			using var client = TestClient.Create(stub);
-
-			await call(client, TestContext.Current.CancellationToken);
-
-			stub.Calls.Should().HaveCount(2, name);
-			stub.Calls[1].Body.Should().NotBeNullOrEmpty(name).And.Be(stub.Calls[0].Body, name);
-			stub.Calls[1].Authorization.Should().Be("Bearer token-2", name);
-		}
-	}
+	public Task EveryRequest_ResendsAnIdenticalBodyAfterA401()
+		=> WriteOperationChecks.ShouldResendIdenticalBodiesAfter401Async(Requests, HttpStatusCode.Created, ActionJson);
 
 	[Fact]
 	public void Commands_BuildTheDocumentedParameterKeys()

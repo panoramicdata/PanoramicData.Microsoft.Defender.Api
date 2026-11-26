@@ -15,6 +15,10 @@ public partial class MachinesTests
 		("SetDeviceValue", (c, t) => c.Machines.SetDeviceValueAsync(Id, new SetDeviceValueRequest { DeviceValue = MachineDeviceValue.Low }, t))
 	];
 
+	private static MachineTagRequest Tag(MachineTagAction action) => new() { Value = "x", Action = action };
+
+	private static SetDeviceValueRequest DeviceValue(MachineDeviceValue value) => new() { DeviceValue = value };
+
 	[Fact]
 	public async Task Update_SendsPatchMachinesId_WithBothProperties()
 	{
@@ -53,18 +57,18 @@ public partial class MachinesTests
 	[Fact]
 	public async Task AddOrRemoveTag_SendsRemove()
 	{
-		var call = await TestClient.CaptureAsync((c, t) => c.Machines.AddOrRemoveTagAsync(Id, new MachineTagRequest { Value = "x", Action = MachineTagAction.Remove }, t), MachineJson);
+		var call = await TestClient.CaptureAsync((c, t) => c.Machines.AddOrRemoveTagAsync(Id, Tag(MachineTagAction.Remove), t), MachineJson);
 
 		call.Body.Should().Be("""{"Value":"x","Action":"Remove"}""");
 	}
 
 	[Fact]
 	public async Task AddOrRemoveTag_MapsTheUpdatedMachine()
-		=> AssertMachine(await TestClient.ReadAsync((c, t) => c.Machines.AddOrRemoveTagAsync(Id, new MachineTagRequest { Value = "x", Action = MachineTagAction.Add }, t), MachineJson));
+		=> AssertMachine(await TestClient.ReadAsync((c, t) => c.Machines.AddOrRemoveTagAsync(Id, Tag(MachineTagAction.Add), t), MachineJson));
 
 	[Fact]
 	public Task AddOrRemoveTag_MapsAnError()
-		=> TestClient.ShouldFailAsync((c, t) => c.Machines.AddOrRemoveTagAsync(Id, new MachineTagRequest { Value = "x", Action = MachineTagAction.Add }, t), HttpStatusCode.NotFound,
+		=> TestClient.ShouldFailAsync((c, t) => c.Machines.AddOrRemoveTagAsync(Id, Tag(MachineTagAction.Add), t), HttpStatusCode.NotFound,
 			"""{"error":{"code":"ResourceNotFound","message":"No such device","target":"c"}}""", "No such device");
 
 	[Fact]
@@ -93,49 +97,24 @@ public partial class MachinesTests
 	[Fact]
 	public async Task SetDeviceValue_SendsPostMachinesIdSetDeviceValue()
 	{
-		var call = await TestClient.CaptureAsync((c, t) => c.Machines.SetDeviceValueAsync(Id, new SetDeviceValueRequest { DeviceValue = MachineDeviceValue.High }, t), MachineJson);
+		var call = await TestClient.CaptureAsync((c, t) => c.Machines.SetDeviceValueAsync(Id, DeviceValue(MachineDeviceValue.High), t), MachineJson);
 
 		call.ShouldBeRequest(HttpMethod.Post, "/api/machines/" + Id + "/setDeviceValue", "", """{"DeviceValue":"High"}""");
 	}
 
 	[Fact]
 	public async Task SetDeviceValue_MapsTheUpdatedMachine()
-		=> AssertMachine(await TestClient.ReadAsync((c, t) => c.Machines.SetDeviceValueAsync(Id, new SetDeviceValueRequest { DeviceValue = MachineDeviceValue.High }, t), MachineJson));
+		=> AssertMachine(await TestClient.ReadAsync((c, t) => c.Machines.SetDeviceValueAsync(Id, DeviceValue(MachineDeviceValue.High), t), MachineJson));
 
 	[Fact]
 	public Task SetDeviceValue_MapsAnError()
-		=> TestClient.ShouldFailAsync((c, t) => c.Machines.SetDeviceValueAsync(Id, new SetDeviceValueRequest { DeviceValue = MachineDeviceValue.High }, t), HttpStatusCode.Forbidden, ErrorJson, "Missing permission");
+		=> TestClient.ShouldFailAsync((c, t) => c.Machines.SetDeviceValueAsync(Id, DeviceValue(MachineDeviceValue.High), t), HttpStatusCode.Forbidden, ErrorJson, "Missing permission");
 
 	[Fact]
-	public async Task EveryWrite_IsRefusedByAReadOnlyClient_BeforeAnythingIsSent()
-	{
-		foreach (var (name, call) in Writes)
-		{
-			var stub = new StubHandler();
-			using var client = TestClient.Create(stub, o => o.IsReadOnly = true);
-
-			var act = () => call(client, TestContext.Current.CancellationToken);
-
-			await act.Should().ThrowAsync<DefenderReadOnlyException>($"{name} changes state");
-			stub.Calls.Should().BeEmpty(name);
-		}
-	}
+	public Task EveryWrite_IsRefusedByAReadOnlyClient_BeforeAnythingIsSent()
+		=> WriteOperationChecks.ShouldBeRefusedWhenReadOnlyAsync(Writes);
 
 	[Fact]
-	public async Task EveryWrite_ResendsAnIdenticalBodyAfterA401()
-	{
-		foreach (var (name, call) in Writes)
-		{
-			var stub = new StubHandler();
-			stub.Enqueue(HttpStatusCode.Unauthorized);
-			stub.Enqueue(HttpStatusCode.OK, MachineJson);
-			using var client = TestClient.Create(stub);
-
-			await call(client, TestContext.Current.CancellationToken);
-
-			stub.Calls.Should().HaveCount(2, name);
-			stub.Calls[1].Body.Should().NotBeNullOrEmpty(name).And.Be(stub.Calls[0].Body, name);
-			stub.Calls[1].Authorization.Should().Be("Bearer token-2", name);
-		}
-	}
+	public Task EveryWrite_ResendsAnIdenticalBodyAfterA401()
+		=> WriteOperationChecks.ShouldResendIdenticalBodiesAfter401Async(Writes, HttpStatusCode.OK, MachineJson);
 }
