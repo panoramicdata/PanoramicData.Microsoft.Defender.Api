@@ -171,6 +171,7 @@ public class ErrorMapperTests
 
 		protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context, CancellationToken cancellationToken)
 		{
+			ArgumentNullException.ThrowIfNull(stream);
 			started.TrySetResult();
 			await Task.Delay(Timeout.Infinite, cancellationToken);
 		}
@@ -184,7 +185,11 @@ public class ErrorMapperTests
 
 	private sealed class ThrowingContent : HttpContent
 	{
-		protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) => throw new HttpRequestException("lost");
+		protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+		{
+			ArgumentNullException.ThrowIfNull(stream);
+			throw new HttpRequestException("lost");
+		}
 
 		protected override bool TryComputeLength(out long length)
 		{
