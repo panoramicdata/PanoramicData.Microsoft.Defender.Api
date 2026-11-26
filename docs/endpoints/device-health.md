@@ -2,4 +2,4 @@
 
 | Method | Path | Client method | Test |
 |---|---|---|---|
-| GET | `/deviceavinfo` |  |  |
+| GET | `/deviceavinfo` | `IDeviceHealthApi.ListAntivirusHealthAsync` | `DeviceHealthTests.ListAntivirusHealth_SendsGetDeviceAvInfo` |

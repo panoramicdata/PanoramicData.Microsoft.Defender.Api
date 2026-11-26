@@ -9,12 +9,4 @@ domains
 ips
 users
 advanced-hunting
-software
-recommendations
-scores
-remediation
-assessment-exports
-device-health
-browser-extensions
-security-baselines
 authenticated-scan
