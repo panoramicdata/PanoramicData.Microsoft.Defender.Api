@@ -12,9 +12,9 @@ public partial class MachinesTests
 	[Fact]
 	public async Task Find_SendsTheParenthesisedPath_WithTheTimestampAndKey()
 	{
-		var call = await TestClient.CaptureAsync((c, t) => c.Machines.FindAsync(Moment, "10.0.0.5", t), Envelope(""));
+		var call = await TestClient.CaptureAsync((c, t) => c.Machines.FindAsync(Moment, TestAddresses.Device, t), Envelope(""));
 
-		call.ShouldBeRequest(HttpMethod.Get, "/api/machines/find(timestamp=2024-05-06T07%3A08%3A09Z,key=10.0.0.5)");
+		call.ShouldBeRequest(HttpMethod.Get, $"/api/machines/find(timestamp=2024-05-06T07%3A08%3A09Z,key={TestAddresses.Device})");
 	}
 
 	[Fact]
@@ -31,21 +31,21 @@ public partial class MachinesTests
 	[Fact]
 	public async Task Find_MapsTheDevices()
 	{
-		var page = await TestClient.ReadAsync((c, t) => c.Machines.FindAsync(Moment, "10.0.0.5", t), Envelope(MachineJson));
+		var page = await TestClient.ReadAsync((c, t) => c.Machines.FindAsync(Moment, TestAddresses.Device, t), Envelope(MachineJson));
 
 		AssertMachine(page.Value.Should().ContainSingle().Subject);
 	}
 
 	[Fact]
 	public Task Find_MapsAnError()
-		=> TestClient.ShouldFailAsync((c, t) => c.Machines.FindAsync(Moment, "10.0.0.5", t), HttpStatusCode.Forbidden, ErrorJson, "Missing permission");
+		=> TestClient.ShouldFailAsync((c, t) => c.Machines.FindAsync(Moment, TestAddresses.Device, t), HttpStatusCode.Forbidden, ErrorJson, "Missing permission");
 
 	[Fact]
 	public async Task FindByIp_SendsTheQuotedIpAndTheTimestampInThePath()
 	{
-		var call = await TestClient.CaptureAsync((c, t) => c.Machines.FindByIpAsync("10.0.0.5", Moment, t), Envelope(""));
+		var call = await TestClient.CaptureAsync((c, t) => c.Machines.FindByIpAsync(TestAddresses.Device, Moment, t), Envelope(""));
 
-		call.ShouldBeRequest(HttpMethod.Get, "/api/machines/findbyip(ip='10.0.0.5',timestamp=2024-05-06T07%3A08%3A09Z)");
+		call.ShouldBeRequest(HttpMethod.Get, $"/api/machines/findbyip(ip='{TestAddresses.Device}',timestamp=2024-05-06T07%3A08%3A09Z)");
 	}
 
 	[Fact]
@@ -59,14 +59,14 @@ public partial class MachinesTests
 	[Fact]
 	public async Task FindByIp_MapsTheDevices()
 	{
-		var page = await TestClient.ReadAsync((c, t) => c.Machines.FindByIpAsync("10.0.0.5", Moment, t), Envelope(MachineJson));
+		var page = await TestClient.ReadAsync((c, t) => c.Machines.FindByIpAsync(TestAddresses.Device, Moment, t), Envelope(MachineJson));
 
 		AssertMachine(page.Value.Should().ContainSingle().Subject);
 	}
 
 	[Fact]
 	public Task FindByIp_MapsAnError_ForATimestampOlderThan30Days()
-		=> TestClient.ShouldFailAsync((c, t) => c.Machines.FindByIpAsync("10.0.0.5", Moment, t), HttpStatusCode.BadRequest,
+		=> TestClient.ShouldFailAsync((c, t) => c.Machines.FindByIpAsync(TestAddresses.Device, Moment, t), HttpStatusCode.BadRequest,
 			"""{"error":{"code":"BadRequest","message":"Timestamp too old","target":"c"}}""", "Timestamp too old");
 
 	[Fact]

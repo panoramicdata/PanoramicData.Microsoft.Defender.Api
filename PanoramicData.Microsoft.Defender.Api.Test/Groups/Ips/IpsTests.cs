@@ -10,7 +10,7 @@ public class IpsTests
 	private const string StatisticsJson = """
 		{
 			"@odata.context": "https://defender.test/api/$metadata#microsoft.windowsDefenderATP.api.InOrgIPStats",
-			"ipAddress": "10.209.67.177",
+			"ipAddress": "198.51.100.77",
 			"organizationPrevalence": 63515,
 			"orgFirstSeen": "2017-07-30T13:36:06Z",
 			"orgLastSeen": "2017-08-29T13:32:59Z"
@@ -19,7 +19,7 @@ public class IpsTests
 
 	[Fact]
 	public Task ListAlerts_SendsGetIpsIpAlerts()
-		=> RelatedEntityChecks.AssertGetAsync((c, t) => c.Ips.ListAlertsAsync("10.209.67.177", t), "/api/ips/10.209.67.177/alerts");
+		=> RelatedEntityChecks.AssertGetAsync((c, t) => c.Ips.ListAlertsAsync(TestAddresses.Statistics, t), $"/api/ips/{TestAddresses.Statistics}/alerts");
 
 	[Fact]
 	public async Task ListAlerts_EscapesTheAddressAsOneSegment()
@@ -31,7 +31,7 @@ public class IpsTests
 
 	[Fact]
 	public Task ListAlerts_MapsTheAlerts()
-		=> RelatedEntityChecks.AssertAlertsAsync((c, t) => c.Ips.ListAlertsAsync("10.209.67.177", t));
+		=> RelatedEntityChecks.AssertAlertsAsync((c, t) => c.Ips.ListAlertsAsync(TestAddresses.Statistics, t));
 
 	[Fact]
 	public Task ListAlerts_AnInvalidAddressIsMappedAsAnError()
@@ -41,25 +41,25 @@ public class IpsTests
 	[Fact]
 	public async Task GetStatistics_WithNoOptions_SendsNoQuery()
 	{
-		var call = await TestClient.CaptureAsync((c, t) => c.Ips.GetStatisticsAsync("10.209.67.177", null, t), StatisticsJson);
+		var call = await TestClient.CaptureAsync((c, t) => c.Ips.GetStatisticsAsync(TestAddresses.Statistics, null, t), StatisticsJson);
 
-		call.ShouldBeRequest(HttpMethod.Get, "/api/ips/10.209.67.177/stats");
+		call.ShouldBeRequest(HttpMethod.Get, $"/api/ips/{TestAddresses.Statistics}/stats");
 	}
 
 	[Fact]
 	public async Task GetStatistics_SendsGetIpsIpStats_WithTheLookBackHours()
 	{
-		var call = await TestClient.CaptureAsync((c, t) => c.Ips.GetStatisticsAsync("10.209.67.177", new EntityStatisticsOptions { LookBackHours = 48 }, t), StatisticsJson);
+		var call = await TestClient.CaptureAsync((c, t) => c.Ips.GetStatisticsAsync(TestAddresses.Statistics, new EntityStatisticsOptions { LookBackHours = 48 }, t), StatisticsJson);
 
-		call.ShouldBeRequest(HttpMethod.Get, "/api/ips/10.209.67.177/stats", "?lookBackHours=48");
+		call.ShouldBeRequest(HttpMethod.Get, $"/api/ips/{TestAddresses.Statistics}/stats", "?lookBackHours=48");
 	}
 
 	[Fact]
 	public async Task GetStatistics_MapsEveryField()
 	{
-		var stats = await TestClient.ReadAsync((c, t) => c.Ips.GetStatisticsAsync("10.209.67.177", null, t), StatisticsJson);
+		var stats = await TestClient.ReadAsync((c, t) => c.Ips.GetStatisticsAsync(TestAddresses.Statistics, null, t), StatisticsJson);
 
-		(stats.IpAddress, stats.OrganizationPrevalence).Should().Be(("10.209.67.177", 63515L));
+		(stats.IpAddress, stats.OrganizationPrevalence).Should().Be((TestAddresses.Statistics, 63515L));
 		stats.OrgFirstSeen.Should().Be(new DateTimeOffset(2017, 7, 30, 13, 36, 6, TimeSpan.Zero));
 		stats.OrgLastSeen.Should().Be(new DateTimeOffset(2017, 8, 29, 13, 32, 59, TimeSpan.Zero));
 	}
@@ -75,9 +75,9 @@ public class IpsTests
 
 	[Fact]
 	public Task GetStatistics_MapsAnError()
-		=> RelatedEntityChecks.AssertErrorAsync((c, t) => c.Ips.GetStatisticsAsync("10.209.67.177", null, t));
+		=> RelatedEntityChecks.AssertErrorAsync((c, t) => c.Ips.GetStatisticsAsync(TestAddresses.Statistics, null, t));
 
 	[Fact]
 	public Task GetAllIpAlerts_FollowsTheNextLink()
-		=> RelatedEntityChecks.AssertPagesAsync((c, t) => c.GetAllIpAlertsAsync("10.209.67.177", t), "/api/ips/10.209.67.177/alerts", """{"id":"a"}""", """{"id":"b"}""", a => a.Id);
+		=> RelatedEntityChecks.AssertPagesAsync((c, t) => c.GetAllIpAlertsAsync(TestAddresses.Statistics, t), $"/api/ips/{TestAddresses.Statistics}/alerts", """{"id":"a"}""", """{"id":"b"}""", a => a.Id);
 }

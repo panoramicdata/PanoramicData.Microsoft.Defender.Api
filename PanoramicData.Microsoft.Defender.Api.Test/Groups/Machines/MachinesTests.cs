@@ -20,7 +20,7 @@ public partial class MachinesTests
 			"osProcessor": "x64",
 			"version": "22H2",
 			"osBuild": 22621,
-			"lastIpAddress": "10.0.0.5",
+			"lastIpAddress": "192.0.2.5",
 			"lastExternalIpAddress": "203.0.113.9",
 			"healthStatus": "Active",
 			"rbacGroupName": "GroupOne",
@@ -30,7 +30,7 @@ public partial class MachinesTests
 			"machineTags": ["tag-a", "tag-b"],
 			"exposureLevel": "Medium",
 			"deviceValue": "High",
-			"ipAddresses": [{"ipAddress": "10.0.0.5", "macAddress": "AABBCCDDEEFF", "type": "Ethernet", "operationalStatus": "Up"}],
+			"ipAddresses": [{"ipAddress": "192.0.2.5", "macAddress": "AABBCCDDEEFF", "type": "Ethernet", "operationalStatus": "Up"}],
 			"osArchitecture": "64-bit",
 			"vmMetadata": {"vmId": "vm-1", "cloudProvider": "Azure", "resourceId": "res-1", "subscriptionId": "sub-1"}
 		}
@@ -53,7 +53,7 @@ public partial class MachinesTests
 		m.OsProcessor.Should().Be("x64");
 		m.Version.Should().Be("22H2");
 		m.OsBuild.Should().Be(22621);
-		m.LastIpAddress.Should().Be("10.0.0.5");
+		m.LastIpAddress.Should().Be(TestAddresses.Device);
 		m.LastExternalIpAddress.Should().Be("203.0.113.9");
 		m.HealthStatus.Should().Be("Active");
 		m.RbacGroupName.Should().Be("GroupOne");
@@ -65,7 +65,7 @@ public partial class MachinesTests
 		m.DeviceValue.Should().Be(MachineDeviceValue.High);
 		m.OsArchitecture.Should().Be("64-bit");
 		var ip = m.IpAddresses.Should().ContainSingle().Subject;
-		(ip.IpAddress, ip.MacAddress, ip.Type, ip.OperationalStatus).Should().Be(("10.0.0.5", "AABBCCDDEEFF", "Ethernet", "Up"));
+		(ip.IpAddress, ip.MacAddress, ip.Type, ip.OperationalStatus).Should().Be((TestAddresses.Device, "AABBCCDDEEFF", "Ethernet", "Up"));
 		var vm = m.VmMetadata.Should().NotBeNull().And.Subject.As<MachineVmMetadata>();
 		(vm.VmId, vm.CloudProvider, vm.ResourceId, vm.SubscriptionId).Should().Be(("vm-1", "Azure", "res-1", "sub-1"));
 	}
