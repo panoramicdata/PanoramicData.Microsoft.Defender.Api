@@ -20,6 +20,13 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 			?? throw new InvalidOperationException("The tenant reports no software with exposed devices among the first 100, so the by-product operations cannot be checked. Use a tenant with onboarded devices.");
 	}
 
+	/// <summary>An OData filter matching one vendor exactly; a single quote in the name is escaped by doubling it.</summary>
+	private static string VendorFilter(string vendor)
+	{
+		var escaped = vendor.Replace("'", "''", StringComparison.Ordinal);
+		return string.Concat("vendor eq '", escaped, "'");
+	}
+
 	[Fact]
 	public async Task ListAsync_ReturnsAPageOfProducts()
 	{
@@ -34,7 +41,7 @@ public class SoftwareIntegrationTests(DefenderFixture fixture)
 	{
 		var first = await FirstExposedAsync();
 
-		var page = await fixture.Client.Software.ListAsync(new ODataListOptions { Filter = $"vendor eq '{first.Vendor!.Replace("'", "''", StringComparison.Ordinal)}'", Top = 5 }, Ct);
+		var page = await fixture.Client.Software.ListAsync(new ODataListOptions { Filter = VendorFilter(first.Vendor!), Top = 5 }, Ct);
 
 		page.Value.Should().NotBeEmpty().And.OnlyContain(p => p.Vendor == first.Vendor);
 	}
