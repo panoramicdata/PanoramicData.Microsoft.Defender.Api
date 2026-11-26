@@ -29,7 +29,7 @@ public sealed partial class DefenderClient
 
 		var link = ValidateNextLink(page.NextLink);
 		using var response = await _httpClient.GetAsync(link, cancellationToken).ConfigureAwait(false);
-		if (await DefenderErrorMapper.CreateAsync(response, _timeProvider).ConfigureAwait(false) is { } error)
+		if (await DefenderErrorMapper.CreateAsync(response, _timeProvider, cancellationToken).ConfigureAwait(false) is { } error)
 		{
 			throw error;
 		}

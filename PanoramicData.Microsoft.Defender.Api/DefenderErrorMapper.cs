@@ -10,14 +10,24 @@ namespace PanoramicData.MicrosoftDefender.Api;
 /// </summary>
 internal static class DefenderErrorMapper
 {
-	public static async Task<Exception?> CreateAsync(HttpResponseMessage response, TimeProvider timeProvider)
+	/// <summary>The most of an error body that is read; a larger one is treated as unreadable.</summary>
+	internal const long MaxBodyBytes = 1024 * 1024;
+
+	/// <summary>How long reading an error body may take before it is treated as unreadable.</summary>
+	internal static readonly TimeSpan BodyTimeout = TimeSpan.FromSeconds(30);
+
+	/// <summary>Maps a response that nobody can cancel (Refit gives its exception factory no token); the read is bounded by <see cref="BodyTimeout"/>.</summary>
+	public static Task<Exception?> CreateAsync(HttpResponseMessage response, TimeProvider timeProvider)
+		=> CreateAsync(response, timeProvider, CancellationToken.None);
+
+	public static async Task<Exception?> CreateAsync(HttpResponseMessage response, TimeProvider timeProvider, CancellationToken cancellationToken)
 	{
 		if (response.IsSuccessStatusCode)
 		{
 			return null;
 		}
 
-		var body = await ReadBodyAsync(response).ConfigureAwait(false);
+		var body = await ReadBodyAsync(response, timeProvider, cancellationToken).ConfigureAwait(false);
 		var error = Parse(body);
 		var message = error.Message is { Length: > 0 } text
 			? text
@@ -55,15 +65,24 @@ internal static class DefenderErrorMapper
 			? property.GetString()
 			: null;
 
-	private static async Task<string> ReadBodyAsync(HttpResponseMessage response)
+	// The body is untrusted and may be endless or stall: it is read within a size and time limit, and the caller's token.
+	private static async Task<string> ReadBodyAsync(HttpResponseMessage response, TimeProvider timeProvider, CancellationToken cancellationToken)
 	{
+		using var timeout = new CancellationTokenSource(BodyTimeout, timeProvider);
+		using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
 		try
 		{
-			return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+			await response.Content.LoadIntoBufferAsync(MaxBodyBytes, linked.Token).ConfigureAwait(false);
+			return await response.Content.ReadAsStringAsync(linked.Token).ConfigureAwait(false);
+		}
+		catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+		{
+			// Only the time limit passed (the caller did not cancel): report the status, not the stalled read.
+			return string.Empty;
 		}
 		catch (Exception exception) when (exception is InvalidOperationException or HttpRequestException)
 		{
-			// An unsupported charset in Content-Type, or a connection lost while reading (HttpContent reports I/O failures as HttpRequestException): report the status, not the read.
+			// An unsupported charset in Content-Type, a body over the size limit, or a connection lost while reading (HttpContent reports I/O failures as HttpRequestException): report the status, not the read.
 			return string.Empty;
 		}
 	}

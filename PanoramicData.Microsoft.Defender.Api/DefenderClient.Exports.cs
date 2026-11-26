@@ -32,7 +32,7 @@ public sealed partial class DefenderClient
 		foreach (var link in links)
 		{
 			using var response = await _downloadClient.GetAsync(link, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-			if (await DefenderErrorMapper.CreateAsync(response, _timeProvider).ConfigureAwait(false) is { } error)
+			if (await DefenderErrorMapper.CreateAsync(response, _timeProvider, cancellationToken).ConfigureAwait(false) is { } error)
 			{
 				throw error;
 			}
