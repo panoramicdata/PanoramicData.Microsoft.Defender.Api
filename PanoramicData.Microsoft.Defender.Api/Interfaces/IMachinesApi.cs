@@ -5,7 +5,7 @@ using PanoramicData.MicrosoftDefender.Api.Models.Recommendations;
 using PanoramicData.MicrosoftDefender.Api.Models.Users;
 using PanoramicData.MicrosoftDefender.Api.Models.Vulnerabilities;
 using Refit;
-using SoftwareProduct = PanoramicData.MicrosoftDefender.Api.Models.Software.Software;
+using SoftwareProduct = PanoramicData.MicrosoftDefender.Api.Models.Software.SoftwareProduct;
 
 namespace PanoramicData.MicrosoftDefender.Api.Interfaces;
 

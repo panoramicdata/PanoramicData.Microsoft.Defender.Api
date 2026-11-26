@@ -133,8 +133,8 @@ public partial class MachinesTests
 
 		var s = page.Value.Should().ContainSingle().Subject;
 		(s.Id, s.Name, s.Vendor, s.Weaknesses).Should().Be(("vendor-_-product", "product", "vendor", 4L));
-		(s.PublicExploit, s.ActiveAlert, s.IsNormalized).Should().Be((true, false, true));
-		(s.ExposedMachines, s.InstalledMachines, s.ImpactScore).Should().Be((2L, 9L, 1.5));
+		(s.PublicExploit, s.ActiveAlert).Should().Be((true, false));
+		(s.ExposedMachines, s.ImpactScore).Should().Be((2L, 1.5));
 	}
 
 	[Fact]

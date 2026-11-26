@@ -2,17 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace PanoramicData.MicrosoftDefender.Api.Models.Recommendations;
 
-/// <summary>
-/// A security recommendation. This is a minimal stand-in written by the machines group so that
-/// <c>machines/{id}/recommendations</c> has a result type; the recommendations group owns this type and may replace it.
-/// </summary>
+/// <summary>A security recommendation affecting the tenant.</summary>
 public class Recommendation
 {
-	/// <summary>The recommendation id, such as <c>va-_-google-_-chrome</c>.</summary>
+	/// <summary>The recommendation id, such as va-_-google-_-chrome.</summary>
 	[JsonPropertyName("id")]
 	public string? Id { get; set; }
 
-	/// <summary>The product the recommendation concerns.</summary>
+	/// <summary>The related software's name.</summary>
 	[JsonPropertyName("productName")]
 	public string? ProductName { get; set; }
 
@@ -20,23 +17,35 @@ public class Recommendation
 	[JsonPropertyName("recommendationName")]
 	public string? RecommendationName { get; set; }
 
-	/// <summary>How many weaknesses it addresses.</summary>
+	/// <summary>How many vulnerabilities were found.</summary>
 	[JsonPropertyName("weaknesses")]
 	public long? Weaknesses { get; set; }
 
-	/// <summary>The vendor.</summary>
+	/// <summary>The related vendor.</summary>
 	[JsonPropertyName("vendor")]
 	public string? Vendor { get; set; }
 
-	/// <summary>The recommended version.</summary>
+	/// <summary>The version to move to.</summary>
 	[JsonPropertyName("recommendedVersion")]
 	public string? RecommendedVersion { get; set; }
 
-	/// <summary>The recommendation category.</summary>
+	/// <summary>The program to move to.</summary>
+	[JsonPropertyName("recommendedProgram")]
+	public string? RecommendedProgram { get; set; }
+
+	/// <summary>The vendor of the program to move to.</summary>
+	[JsonPropertyName("recommendedVendor")]
+	public string? RecommendedVendor { get; set; }
+
+	/// <summary>The category: Accounts, Application, Network, OS or SecurityControls.</summary>
 	[JsonPropertyName("recommendationCategory")]
 	public string? RecommendationCategory { get; set; }
 
-	/// <summary>The severity score.</summary>
+	/// <summary>The finer category.</summary>
+	[JsonPropertyName("subCategory")]
+	public string? SubCategory { get; set; }
+
+	/// <summary>The potential effect on the secure score, 1 to 10.</summary>
 	[JsonPropertyName("severityScore")]
 	public double? SeverityScore { get; set; }
 
@@ -44,19 +53,23 @@ public class Recommendation
 	[JsonPropertyName("publicExploit")]
 	public bool? PublicExploit { get; set; }
 
-	/// <summary>Whether an alert is active.</summary>
+	/// <summary>Whether an active alert relates to it.</summary>
 	[JsonPropertyName("activeAlert")]
 	public bool? ActiveAlert { get; set; }
 
-	/// <summary>The remediation type.</summary>
+	/// <summary>Threat analytics reports tied to the recommendation.</summary>
+	[JsonPropertyName("associatedThreats")]
+	public IReadOnlyList<string> AssociatedThreats { get; set; } = [];
+
+	/// <summary>The kind of fix: ConfigurationChange, Update, Upgrade or Uninstall.</summary>
 	[JsonPropertyName("remediationType")]
 	public string? RemediationType { get; set; }
 
-	/// <summary>The recommendation's status.</summary>
+	/// <summary>The exception state: Active or Exception.</summary>
 	[JsonPropertyName("status")]
 	public string? Status { get; set; }
 
-	/// <summary>The effect on the configuration score.</summary>
+	/// <summary>The effect on the secure score for devices.</summary>
 	[JsonPropertyName("configScoreImpact")]
 	public double? ConfigScoreImpact { get; set; }
 
@@ -64,11 +77,31 @@ public class Recommendation
 	[JsonPropertyName("exposureImpact")]
 	public double? ExposureImpact { get; set; }
 
-	/// <summary>How many devices it applies to.</summary>
+	/// <summary>How many devices have the product installed.</summary>
 	[JsonPropertyName("totalMachineCount")]
 	public long? TotalMachineCount { get; set; }
 
-	/// <summary>How many devices are exposed.</summary>
+	/// <summary>How many of them are exposed to vulnerabilities.</summary>
 	[JsonPropertyName("exposedMachinesCount")]
 	public long? ExposedMachinesCount { get; set; }
+
+	/// <summary>How many devices are not affected in their productivity.</summary>
+	[JsonPropertyName("nonProductivityImpactedAssets")]
+	public long? NonProductivityImpactedAssets { get; set; }
+
+	/// <summary>The related software component.</summary>
+	[JsonPropertyName("relatedComponent")]
+	public string? RelatedComponent { get; set; }
+
+	/// <summary>Whether an unpatchable CVE is involved. Seen in a response example only.</summary>
+	[JsonPropertyName("hasUnpatchableCve")]
+	public bool? HasUnpatchableCve { get; set; }
+
+	/// <summary>Tags on the recommendation, such as internetFacing. Seen in response examples only.</summary>
+	[JsonPropertyName("tags")]
+	public IReadOnlyList<string> Tags { get; set; } = [];
+
+	/// <summary>The count of exposed devices that are critical at any level.</summary>
+	[JsonPropertyName("exposedCriticalDevices")]
+	public long? ExposedCriticalDevices { get; set; }
 }
