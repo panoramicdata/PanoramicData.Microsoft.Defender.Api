@@ -17,7 +17,8 @@ IMPORTANT: Apply these in order, most important first.
 
 ## Tools
 
-- IMPORTANT: Build and test with `dotnet build` / `dotnet test`.
+- IMPORTANT: Build with `dotnet build`.
+- IMPORTANT: Test with `dotnet test`.
 - IMPORTANT: Use `git` for version control, following the repository's contributing guidelines where present.
 
 ## Formatting
