@@ -1,3 +1,4 @@
+using PanoramicData.MicrosoftDefender.Api.Models.Alerts;
 using PanoramicData.MicrosoftDefender.Api.Models.Vulnerabilities;
 using PanoramicData.MicrosoftDefender.Api.Test.Support;
 using System.Net;
@@ -61,7 +62,7 @@ public partial class MachinesTests
 
 		var a = page.Value.Should().ContainSingle().Subject;
 		(a.Id, a.IncidentId, a.InvestigationId, a.AssignedTo).Should().Be(("da1_1", 12L, 34L, "analyst@example.test"));
-		(a.Severity, a.Status, a.Classification, a.Determination, a.InvestigationState).Should().Be(("High", "New", "TruePositive", "Malware", "Running"));
+		(a.Severity, a.Status, a.Classification, a.Determination, a.InvestigationState).Should().Be((AlertSeverity.High, AlertStatus.New, "TruePositive", "Malware", "Running"));
 		(a.DetectionSource, a.Category, a.ThreatFamilyName, a.Title, a.Description).Should().Be(("WindowsDefenderAv", "Malware", "Family", "A title", "A description"));
 		(a.MachineId, a.ComputerDnsName, a.RbacGroupName).Should().Be(("m1", "pc-01.example.test", "GroupOne"));
 		new[] { a.AlertCreationTime, a.FirstEventTime, a.LastEventTime, a.LastUpdateTime, a.ResolvedTime }

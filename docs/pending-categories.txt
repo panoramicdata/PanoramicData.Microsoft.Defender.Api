@@ -1,7 +1,3 @@
-alerts
-investigations
-indicators
-library
 files
 domains
 ips
