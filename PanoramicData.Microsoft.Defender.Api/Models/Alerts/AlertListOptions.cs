@@ -6,7 +6,7 @@ namespace PanoramicData.MicrosoftDefender.Api.Models.Alerts;
 public class AlertListOptions : ODataListOptions
 {
 	/// <summary>The only <c>$expand</c> value the service documents: include each alert's evidence.</summary>
-	public const string ExpandEvidence = "evidence";
+	public static string ExpandEvidence => "evidence";
 
 	/// <summary>Related data to include (<c>$expand</c>); use <see cref="ExpandEvidence"/>.</summary>
 	[AliasAs("$expand")]

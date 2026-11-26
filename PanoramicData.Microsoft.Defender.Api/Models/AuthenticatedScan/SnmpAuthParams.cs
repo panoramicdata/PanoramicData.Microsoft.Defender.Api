@@ -15,7 +15,7 @@ namespace PanoramicData.MicrosoftDefender.Api.Models.AuthenticatedScan;
 public class SnmpAuthParams
 {
 	/// <summary>The only documented discriminator value, for SNMP credentials.</summary>
-	public const string SnmpODataType = "#microsoft.windowsDefenderATP.api.SnmpAuthParams";
+	public static string SnmpODataType => "#microsoft.windowsDefenderATP.api.SnmpAuthParams";
 
 	/// <summary>The OData type discriminator; always <see cref="SnmpODataType"/> for SNMP.</summary>
 	[JsonPropertyName("@odata.type")]

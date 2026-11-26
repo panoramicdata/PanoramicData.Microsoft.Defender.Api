@@ -6,7 +6,7 @@ namespace PanoramicData.MicrosoftDefender.Api.Models.Indicators;
 public class IndicatorImportRequest
 {
 	/// <summary>The most indicators the service accepts in one call.</summary>
-	public const int MaxBatchSize = 500;
+	public static int MaxBatchSize => 500;
 
 	/// <summary>The indicators (the property is named <c>Indicators</c> on the wire, capital I).</summary>
 	/// <exception cref="ArgumentException">The list is empty.</exception>

@@ -6,7 +6,7 @@ namespace PanoramicData.MicrosoftDefender.Api.Models.Indicators;
 public class IndicatorBatchDeleteRequest
 {
 	/// <summary>The most ids the service accepts in one call.</summary>
-	public const int MaxBatchSize = 500;
+	public static int MaxBatchSize => 500;
 
 	/// <summary>The ids of the indicators to delete (the property is named <c>IndicatorIds</c> on the wire).</summary>
 	/// <exception cref="ArgumentException">The list is empty.</exception>
